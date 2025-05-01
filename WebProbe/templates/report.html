@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% block title %}Scan Report - {{ url }}{% endblock %}
+{% block content %}
+
+<style>
+    #chatbot-container {
+        background-color: #f7f7f7;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        height: 300px; /* Adjust as needed */
+    }
+
+    #chat-log {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 10px;
+        scrollbar-width: thin; /* For Firefox */
+        scrollbar-color: #a8a8a8 #f7f7f7; /* For Firefox */
+    }
+
+    /* For Chrome, Edge, and Safari */
+    #chat-log::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #chat-log::-webkit-scrollbar-track {
+        background: #f7f7f7;
+    }
+
+    #chat-log::-webkit-scrollbar-thumb {
+        background-color: #a8a8a8;
+        border-radius: 4px;
+    }
+
+    .user-message {
+        background-color: #e2f7cb;
+        color: #333;
+        border-radius: 10px 10px 0 10px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        align-self: flex-start;
+        max-width: 80%;
+        word-break: break-word;
+    }
+
+    .bot-message {
+        background-color: #d1e7ff;
+        color: #333;
+        border-radius: 10px 10px 10px 0;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        align-self: flex-end;
+        max-width: 80%;
+        word-break: break-word;
+    }
+
+    #chat-input {
+        display: flex;
+        margin-top: 10px;
+    }
+
+    #user-query {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px 0 0 5px;
+        outline: none;
+    }
+
+    #chat-input button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 0 5px 5px 0;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    #chat-input button:hover {
+        background-color: #0056b3;
+    }
+
+    .error {
+        color: red;
+        font-style: italic;
+        margin-top: 5px;
+    }
+
+    .url-purpose-cinzel {
+        font-family: 'Cinzel', serif;
+        font-size: 1.1em;
+        line-height: 1.5;
+    }
+
+    .url-purpose-oswald {
+        font-family: 'Oswald', sans-serif;
+        font-size: 1.1em;
+        line-height: 1.5;
+        font-weight: 200;
+    }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Oswald&display=swap" rel="stylesheet">
+
+<div class="max-w-5xl mx-auto" data-scan-id="{{ scan.id }}">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Scan Report for <span class="text-indigo-600">{{ url }}</span></h1>
+
+    {% if result %}
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 cursor-pointer animate-aura-emphasized">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Maliciousness Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-600">Maliciousness Percentage</h3>
+                    <div class="relative pt-1">
+                        <div class="overflow-hidden h-6 mb-4 text-xs flex rounded bg-gray-200">
+                            <div style="width: {{ percentage }}%"
+                                 class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center
+                                 {% if percentage >= 50 %}bg-red-500
+                                 {% elif percentage >= 20 %}bg-yellow-500
+                                 {% else %}bg-green-500{% endif %}">
+                                {{ "%.1f"|format(percentage) }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-lg font-medium text-gray-600">Status</h3>
+                    <span class="inline-block px-4 py-2 text-lg font-semibold rounded-full text-white
+                          {% if category == 'Dangerous' %}bg-red-600
+                          {% elif category == 'Moderate' %}bg-yellow-600
+                          {% elif category == 'Suspicious' %}bg-yellow-500
+                          {% else %}bg-green-600{% endif %}">
+                        {{ category }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 cursor-pointer animate-aura-emphasized">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4"> Summary</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-600">Malicious</h3>
+                    <span class="block text-xl font-bold text-red-600">{{ result['data']['attributes']['stats']['malicious'] }}</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-600">Suspicious</h3>
+                    <span class="block text-xl font-bold text-yellow-600">{{ result['data']['attributes']['stats']['suspicious'] }}</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-600">Harmless</h3>
+                    <span class="block text-xl font-bold text-green-600">{{ result['data']['attributes']['stats']['harmless'] }}</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-600">Undetected</h3>
+                    <span class="block text-xl font-bold text-gray-500">{{ result['data']['attributes']['stats']['undetected'] }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md cursor-pointer animate-aura-emphasized">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">URL Metadata</h2>
+            {% if extra_info %}
+                <div class="space-y-4">
+                    <p><strong class="text-gray-600">Final URL:</strong> <span class="text-indigo-600">{{ extra_info['final_url'] }}</span></p>
+                    <p><strong class="text-gray-600">Serving IP Address:</strong> {{ extra_info['serving_ip'] }}</p>
+                    <p><strong class="text-gray-600">Status Code:</strong> {{ extra_info['status_code'] }}</p>
+                    <p><strong class="text-gray-600">Body Length:</strong> {{ extra_info['body_length'] }}</p>
+                    <p><strong class="text-gray-600">Body SHA-256:</strong> <span class="font-mono text-sm">{{ extra_info['body_sha256'] }}</span></p>
+                    <div>
+                        <strong class="text-gray-600">Headers:</strong>
+                        <div style="overflow-x: auto; white-space: pre-wrap; word-break: break-all; padding: 10px; border: 1px solid #eee; border-radius: 4px;">
+                            <pre>
+                                {% for key, value in extra_info['headers'].items() %}
+                                    {{ key }}: {{ value }}
+                                {% endfor %}
+                            </pre>
+                        </div>
+                    </div>
+                    <div>
+                        <strong class="text-gray-600">HTML Info:</strong>
+                        <ul class="list-disc pl-5 mt-2">
+                            <li><strong>Title:</strong> {{ extra_info['html_info']['title'] }}</li>
+                            <li><strong>Meta Tags:</strong>
+                                <div style="overflow-x: auto; white-space: pre-wrap; word-break: break-all; padding: 10px; border: 1px solid #eee; border-radius: 4px;">
+                                    <pre>
+                                        {% for key, value in extra_info['html_info']['meta_tags'].items() %}
+                                            {{ key }}: {{ value }}
+                                        {% endfor %}
+                                    </pre>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <p><strong class="text-gray-600">Trackers:</strong> {{ extra_info['trackers']|join(', ') or 'None detected' }}</p>
+                    <p><strong class="text-gray-600">Redirection Chain:</strong> {{ extra_info['redirection_chain']|join(' -> ') }}</p>
+                </div>
+            {% else %}
+                <p class="text-gray-500 italic">No additional metadata available.</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md mt-6 cursor-pointer animate-aura-emphasized">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Scan Information</h2>
+            <div class="space-y-2">
+                <p><strong class="text-gray-600">Analysis ID:</strong> {{ result['data']['id'] }}</p>
+                <p><strong class="text-gray-600">Date:</strong> {{ result['data']['attributes']['date'] | datetime }}</p>
+                <p><strong class="text-gray-600">Status:</strong> {{ result['data']['attributes']['status'] }}</p>
+            </div>
+        </div>
+
+        <!--GenAI-Analysis-->
+        <div class="bg-white p-6 rounded-lg shadow-md mt-6 cursor-pointer animate-aura-emphasized">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 url-purpose-cinzel">WebProbe Purpose Analysis</h2>
+            {% if url_purpose %}
+            <pre style="white-space: pre-wrap; font-family: monospace;">{{ url_purpose }}</pre>
+            {% else %}
+            <p class="text-gray-500 italic">No URL purpose analysis available.</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md mt-6 mb-6 cursor-pointer animate-aura-emphasized">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Detailed Scan Results</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-indigo-100">
+                        <tr>
+                            <th class="p-3 text-indigo-700 font-semibold">Vendor</th>
+                            <th class="p-3 text-indigo-700 font-semibold">Category</th>
+                            <th class="p-3 text-indigo-700 font-semibold">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vendor, details in result['data']['attributes']['results'].items() %}
+                            <tr class="hover:bg-gray-50 transition duration-200">
+                                <td class="p-3 border-t">{{ vendor }}</td>
+                                <td class="p-3 border-t">
+                                    <span class="px-2 py-1 rounded-full text-sm font-medium
+                                          {% if details['category'] == 'malicious' %}bg-red-100 text-red-700
+                                          {% elif details['category'] == 'suspicious' %}bg-yellow-100 text-yellow-700
+                                          {% elif details['category'] == 'harmless' %}bg-green-100 text-green-700
+                                          {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                        {{ details['category'] }}
+                                    </span>
+                                </td>
+                                <td class="p-3 border-t">{{ details['result'] or 'N/A' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!--chatbot-->
+        <div id="chatbot-container">
+            <div id="chat-log">
+                </div>
+            <div id="chat-input">
+                <input type="text" id="user-query" placeholder="Ask about this scan...">
+                <button onclick="askBot()">Send</button>
+            </div>
+        </div>
+        
+        <script>
+            function askBot() {
+                const query = document.getElementById('user-query').value;
+                const reportContainer = document.querySelector('.max-w-5xl');
+                const scanId = reportContainer.dataset.scanId;
+        
+                document.getElementById('chat-log').innerHTML += `<p class="user-message">You: ${query}</p>`;
+                document.getElementById('user-query').value = '';
+        
+                fetch(`/ask_report_bot/${scanId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 'query': query })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response received:', data);
+                    const htmlResponse = marked.parse(data.response);
+                    document.getElementById('chat-log').innerHTML += `<p class="bot-message">${htmlResponse}</p>`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('chat-log').innerHTML += `<p class="error">Error communicating with the bot.</p>`;
+                });
+            }
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const urlPurposeElement = document.querySelector('.bg-white.p-6.rounded-lg.shadow-md.mt-6.cursor-pointer.animate-aura-emphasized pre');
+                if (urlPurposeElement) {
+                    const markdownText = urlPurposeElement.textContent;
+                    const htmlOutput = marked.parse(markdownText);
+                    urlPurposeElement.innerHTML = htmlOutput;
+                }
+            });
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <!--endbot-->
+
+        <div class="mt-6">
+            <a href="{{ url_for('history') }}" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition duration-300 shadow-md">Back to History</a>
+        </div>
+    {% else %}
+        <div class="bg-red-100 p-6 rounded-lg shadow-md text-red-700">
+            An error occurred while scanning the URL. Please try again.
+        </div>
+        <a href="{{ url_for('user_dashboard') }}" class="mt-4 inline-block bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition duration-300 shadow-md">Back to Dashboard</a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Scanner - {% block title %}{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes aura-rotate-emphasized {
+            0% {
+                box-shadow: 10px 0 8px rgba(99, 102, 241, 0.9), /* Stronger Indigo glow right */
+                            0 5px 8px rgba(126, 34, 206, 0.1),   /* Very faint purple glow bottom */
+                            -5px 0 8px rgba(99, 102, 241, 0.1),  /* Very faint indigo glow left */
+                            0 -5px 8px rgba(126, 34, 206, 0.1);  /* Very faint purple glow top */
+                border: 2px solid rgba(99, 102, 241, 0.9);        /* Stronger Indigo border right */
+            }
+            25% {
+                box-shadow: 5px 0 8px rgba(126, 34, 206, 0.1),   /* Very faint purple glow right */
+                            0 10px 8px rgba(99, 102, 241, 0.9),  /* Stronger Indigo glow bottom */
+                            -5px 0 8px rgba(126, 34, 206, 0.1),  /* Very faint purple glow left */
+                            0 -5px 8px rgba(99, 102, 241, 0.1);  /* Very faint indigo glow top */
+                border: 2px solid rgba(99, 102, 241, 0.9);        /* Stronger Indigo border bottom */
+            }
+            50% {
+                box-shadow: 5px 0 8px rgba(126, 34, 206, 0.1),   /* Very faint purple glow right */
+                            0 5px 8px rgba(126, 34, 206, 0.1),   /* Very faint purple glow bottom */
+                            -5px 0 8px rgba(99, 102, 241, 0.9),  /* Stronger Indigo glow left */
+                            0 -5px 8px rgba(126, 34, 206, 0.1);  /* Very faint purple glow top */
+                border: 2px solid rgba(99, 102, 241, 0.9);        /* Stronger Indigo border left */
+            }
+            75% {
+                box-shadow: 5px 0 8px rgba(99, 102, 241, 0.1),  /* Very faint indigo glow right */
+                            0 5px 8px rgba(126, 34, 206, 0.9),   /* Stronger purple glow bottom */
+                            -5px 0 8px rgba(99, 102, 241, 0.1),  /* Very faint indigo glow left */
+                            0 -5px 8px rgba(99, 102, 241, 0.1);  /* Very faint indigo glow top */
+                border: 2px solid rgba(126, 34, 206, 0.9);        /* Stronger purple border top */
+            }
+            100% {
+                box-shadow: 10px 0 8px rgba(99, 102, 241, 0.9), /* Stronger Indigo glow right */
+                            0 5px 8px rgba(126, 34, 206, 0.1),   /* Very faint purple glow bottom */
+                            -5px 0 8px rgba(99, 102, 241, 0.1),  /* Very faint indigo glow left */
+                            0 -5px 8px rgba(126, 34, 206, 0.1);  /* Very faint purple glow top */
+                border: 2px solid rgba(99, 102, 241, 0.9);        /* Stronger Indigo border right */
+            }
+        }
+        .animate-aura-emphasized:hover {
+            animation: aura-rotate-emphasized 3s linear infinite;
+        }
+        /* Custom Tailwind overrides for theme */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar {
+            transition: all 0.3s ease-in-out;
+        }
+        .sidebar:hover {
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="text-white text-2xl font-bold tracking-tight">WebProbe</a>
+            <div class="space-x-4">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('user_dashboard') }}" class="text-white hover:text-indigo-200 transition duration-300">Dashboard</a>
+                    <a href="{{ url_for('history') }}" class="text-white hover:text-indigo-200 transition duration-300">History</a>
+                    <a href="{{ url_for('logout') }}" class="text-white hover:text-indigo-200 transition duration-300">Logout</a>
+                {% elif session.get('admin_logged_in') %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="text-white hover:text-indigo-200 transition duration-300">Admin Dashboard</a>
+                    <a href="{{ url_for('logout') }}" class="text-white hover:text-indigo-200 transition duration-300">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('user_login') }}" class="text-white hover:text-indigo-200 transition duration-300">User Login</a>
+                    <a href="{{ url_for('admin_login') }}" class="text-white hover:text-indigo-200 transition duration-300">Admin Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout with Sidebar -->
+    <div class="flex">
+
+        <!-- Content Area -->
+        <main class="flex-1 p-8">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="bg-green-100 text-green-800 p-4 rounded-md mb-4 shadow-sm">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
