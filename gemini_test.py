@@ -5,7 +5,7 @@ import os
 import json
 
 # Initialize Gemini model
-GOOGLE_API_KEY = os.environ.get("AIzaSyDHsGXHbA96EJmy8sbxlERgOoaVJwvirv0")
+GOOGLE_API_KEY = os.environ.get("PLACE_API_KEY_HERE")
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel(model_name='gemini-2.0-flash') # Changed model name
 
